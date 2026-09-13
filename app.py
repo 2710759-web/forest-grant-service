@@ -206,7 +206,7 @@ total_g = df['g_сечения_м2'].sum()
 density_per_ha = total_g / area_ha if area_ha > 0 else 0
 # Берем норматив первой попавшейся породы или выбранной, если их несколько
 ref_species = df['Порода'].iloc[0] if has_species_column else species
-density_norm = SPECIES_DATA.get(ref_species, SPECIES_DATA['Сосنا'])['density_norm']
+density_norm = SPECIES_DATA.get(ref_species, SPECIES_DATA['Сосна'])['density_norm']
 density_relative = (density_per_ha / density_norm * 100) if density_norm > 0 else 0
 
 total_volume = df['Объём_расчётный_м3'].sum()
