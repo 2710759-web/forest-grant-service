@@ -5,6 +5,29 @@ from PIL import Image
 import numpy as np
 from datetime import datetime
 
+# --- ФУНКЦИЯ ОЧИСТКИ ДАННЫХ ---
+def clean_dataframe(df):
+    """Принудительно преобразует ключевые колонки в числа"""
+    # Список колонок, которые должны быть числовыми
+    numeric_columns = [
+        'X', 'Y', 
+        'Площадь кроны, м2', 'Диаметр кроны, м', 
+        'Диаметр ствола, см', 'Высота, м', 'Объём ствола, м3'
+    ]
+    
+    for col in numeric_columns:
+        if col in df.columns:
+            # Заменяем запятые на точки (для русской локали Excel)
+            df[col] = df[col].astype(str).str.replace(',', '.', regex=False)
+            # Удаляем лишние пробелы
+            df[col] = df[col].str.strip()
+            # Преобразуем в числа, ошибки превращаем в NaN
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+    
+    # Удаляем строки, где в ключевых колонках нет данных
+    df = df.dropna(subset=['X', 'Y'])
+    return df
+
 # Настройка страницы
 st.set_page_config(page_title="ЛесАналитика БПЛА", layout="wide")
 
@@ -203,6 +226,7 @@ if demo_mode:
     try:
         image = Image.open("forest.jpg")
         df = pd.read_excel("trees.xlsx")
+        df = clean_dataframe(df)
         st.sidebar.success("✅ Загружены демо-данные")
     except:
         st.error("Демо-файлы не найдены. Пожалуйста, загрузите свои файлы.")
@@ -215,6 +239,7 @@ else:
     try:
         image = Image.open(uploaded_image)
         df = pd.read_excel(uploaded_xlsx)
+        df = clean_dataframe(df)
         st.sidebar.success("✅ Файлы успешно загружены!")
     except Exception as e:
         st.error(f"Ошибка при чтении файлов: {e}")
