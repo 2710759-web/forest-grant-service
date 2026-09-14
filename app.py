@@ -245,7 +245,7 @@ with col1:
     
     if not filtered_df.empty:
         # Показываем изображение как подложку через st.image
-        st.image(image, caption="Ортофотоплан участка", use_column_width=True)
+        st.image(image, caption="Ортофотоплан участка", use_container_width=True)
         
         # Создаем интерактивный график с прозрачным фоном
         fig = go.Figure()
@@ -310,7 +310,7 @@ with col1:
         
     else:
         st.warning("Деревья не найдены. Измените параметры фильтрации.")
-        st.image(image, caption="Ортофотоплан участка", use_column_width=True)
+        st.image(image, caption="Ортофотоплан участка", use_container_width=True)
 
 with col2:
     st.subheader("📈 Сводная аналитика")
