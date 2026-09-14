@@ -203,56 +203,39 @@ if not demo_mode:
 col1, col2 = st.columns([3, 1])
 
 with col1:
-    st.subheader("️ Интерактивная карта выделенных территорий")
+    st.subheader("🗺️ Интерактивная карта выделенных территорий")
     
     if not filtered_df.empty:
         fig = go.Figure()
         
-        # 1. Сжимаем изображение для стабильности (макс 1200px)
-        max_dim = 1200
-        img_w, img_h = image.size
-        if img_w > max_dim or img_h > max_dim:
-            scale = max_dim / max(img_w, img_h)
-            image_resized = image.resize((int(img_w * scale), int(img_h * scale)), Image.LANCZOS)
-        else:
-            image_resized = image.copy()
+        # Конвертируем изображение в base64
+        img_base64 = get_image_base64(image)
         
-        # 2. Конвертируем в base64
-        img_base64 = get_image_base64(image_resized)
-        new_w, new_h = image_resized.size
-        
-        # 3. Масштабируем координаты под новый размер
-        scale_x = new_w / img_w
-        scale_y = new_h / img_h
-        filtered_scaled = filtered_df.copy()
-        filtered_scaled['X_s'] = filtered_scaled['X'] * scale_x
-        filtered_scaled['Y_s'] = filtered_scaled['Y'] * scale_y
-        
-        # 4. Добавляем изображение КАК ФОН с правильными якорями
+        # Добавляем изображение - оно растет ВВЕРХ от y=0
         fig.add_layout_image(
             dict(
                 source=img_base64,
                 xref="x",
                 yref="y",
                 x=0,
-                y=new_h,
-                sizex=new_w,
-                sizey=new_h,
+                y=0,  # Начинаем от 0
+                sizex=image.width,
+                sizey=image.height,
                 xanchor="left",
-                yanchor="top",
+                yanchor="bottom",  # Изображение растет ВВЕРХ
                 sizing="stretch",
                 opacity=1.0,
                 layer="below"
             )
         )
         
-        # 5. Подготовка текста для всплывающих подсказок
+        # Подготовка текста для всплывающих подсказок
         hover_texts = []
-        for i, row in filtered_scaled.iterrows():
+        for i, row in filtered_df.iterrows():
             tree_species = row.get('Порода', species if species else 'Не указана')
             tree_id = row.get('ID', i + 1)
             text = (
-                f"<b> Дерево ID:</b> {tree_id}<br>"
+                f"<b>🌲 Дерево ID:</b> {tree_id}<br>"
                 f"<b>Порода:</b> {tree_species}<br>"
                 f"<b>Высота:</b> {row['Высота, м']:.1f} м<br>"
                 f"<b>Диаметр ствола:</b> {row['Диаметр ствола, см']:.1f} см<br>"
@@ -267,20 +250,20 @@ with col1:
             )
             hover_texts.append(text)
         
-        # 6. Расчет размера точек
+        # Расчет размера точек
         if size_col != "Нет":
-            sizes = (filtered_scaled[size_col] - filtered_scaled[size_col].min()) / (filtered_scaled[size_col].max() - filtered_scaled[size_col].min() + 1e-5) * 30 + 10
+            sizes = (filtered_df[size_col] - filtered_df[size_col].min()) / (filtered_df[size_col].max() - filtered_df[size_col].min() + 1e-5) * 30 + 10
         else:
-            sizes = [15] * len(filtered_scaled)
+            sizes = [15] * len(filtered_df)
         
-        # 7. Добавляем точки
+        # ИНВЕРТИРУЕМ координаты Y точек, чтобы они совпадали с изображением
         fig.add_trace(go.Scatter(
-            x=filtered_scaled['X_s'],
-            y=filtered_scaled['Y_s'],
+            x=filtered_df['X'],
+            y=image.height - filtered_df['Y'],  # Инвертируем Y
             mode='markers',
             marker=dict(
                 size=sizes,
-                color=filtered_scaled[color_col],
+                color=filtered_df[color_col],
                 colorscale='RdYlGn',
                 showscale=True,
                 colorbar=dict(title=color_col),
@@ -292,28 +275,22 @@ with col1:
             name='Деревья'
         ))
         
-        # 8. Настройка осей с сохранением пропорций
-        aspect_ratio = new_h / new_w
-        calc_height = int(900 * aspect_ratio)
-        calc_height = max(400, min(calc_height, 1000))
-        
+        # Настройка осей - НЕ инвертируем Y
         fig.update_layout(
             xaxis=dict(
-                range=[0, new_w],
-                scaleanchor="y",
-                scaleratio=1,
+                range=[0, image.width],
                 showgrid=False,
                 zeroline=False,
                 visible=False
             ),
             yaxis=dict(
-                range=[new_h, 0],
+                range=[0, image.height],  # НЕ инвертируем
                 showgrid=False,
                 zeroline=False,
                 visible=False
             ),
             margin=dict(l=0, r=0, t=40, b=0),
-            height=calc_height,
+            height=700,
             hoverlabel=dict(bgcolor="white", font_size=12, font_family="Arial", bordercolor="#333")
         )
         
