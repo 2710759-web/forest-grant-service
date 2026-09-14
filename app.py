@@ -203,40 +203,56 @@ if not demo_mode:
 col1, col2 = st.columns([3, 1])
 
 with col1:
-    st.subheader("🗺️ Интерактивная карта выделенных территорий")
+    st.subheader("️ Интерактивная карта выделенных территорий")
     
     if not filtered_df.empty:
         fig = go.Figure()
         
-        # 1. Конвертируем изображение в base64
-        img_base64 = get_image_base64(image)
+        # 1. Сжимаем изображение для стабильности (макс 1200px)
+        max_dim = 1200
+        img_w, img_h = image.size
+        if img_w > max_dim or img_h > max_dim:
+            scale = max_dim / max(img_w, img_h)
+            image_resized = image.resize((int(img_w * scale), int(img_h * scale)), Image.LANCZOS)
+        else:
+            image_resized = image.copy()
         
-        # 2. Добавляем изображение КАК ФОН ГРАФИКА
+        # 2. Конвертируем в base64
+        img_base64 = get_image_base64(image_resized)
+        new_w, new_h = image_resized.size
+        
+        # 3. Масштабируем координаты под новый размер
+        scale_x = new_w / img_w
+        scale_y = new_h / img_h
+        filtered_scaled = filtered_df.copy()
+        filtered_scaled['X_s'] = filtered_scaled['X'] * scale_x
+        filtered_scaled['Y_s'] = filtered_scaled['Y'] * scale_y
+        
+        # 4. Добавляем изображение КАК ФОН с правильными якорями
         fig.add_layout_image(
             dict(
                 source=img_base64,
                 xref="x",
                 yref="y",
                 x=0,
-                y=image.height,
-                sizex=image.width,
-                sizey=image.height,
-                xanchor="left",    # ← КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ
-                yanchor="top",     # ← КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ
+                y=new_h,
+                sizex=new_w,
+                sizey=new_h,
+                xanchor="left",
+                yanchor="top",
                 sizing="stretch",
                 opacity=1.0,
                 layer="below"
             )
         )
         
-        # 3. Подготовка текста для всплывающих подсказок
+        # 5. Подготовка текста для всплывающих подсказок
         hover_texts = []
-        for i, row in filtered_df.iterrows():
+        for i, row in filtered_scaled.iterrows():
             tree_species = row.get('Порода', species if species else 'Не указана')
             tree_id = row.get('ID', i + 1)
-            
             text = (
-                f"<b>🌲 Дерево ID:</b> {tree_id}<br>"
+                f"<b> Дерево ID:</b> {tree_id}<br>"
                 f"<b>Порода:</b> {tree_species}<br>"
                 f"<b>Высота:</b> {row['Высота, м']:.1f} м<br>"
                 f"<b>Диаметр ствола:</b> {row['Диаметр ствола, см']:.1f} см<br>"
@@ -251,20 +267,20 @@ with col1:
             )
             hover_texts.append(text)
         
-        # 4. Расчет размера точек
+        # 6. Расчет размера точек
         if size_col != "Нет":
-            sizes = (filtered_df[size_col] - filtered_df[size_col].min()) / (filtered_df[size_col].max() - filtered_df[size_col].min() + 1e-5) * 30 + 10
+            sizes = (filtered_scaled[size_col] - filtered_scaled[size_col].min()) / (filtered_scaled[size_col].max() - filtered_scaled[size_col].min() + 1e-5) * 30 + 10
         else:
-            sizes = [15] * len(filtered_df)
+            sizes = [15] * len(filtered_scaled)
         
-        # 5. Добавляем точки ПОВЕРХ изображения
+        # 7. Добавляем точки
         fig.add_trace(go.Scatter(
-            x=filtered_df['X'],
-            y=filtered_df['Y'],
+            x=filtered_scaled['X_s'],
+            y=filtered_scaled['Y_s'],
             mode='markers',
             marker=dict(
                 size=sizes,
-                color=filtered_df[color_col],
+                color=filtered_scaled[color_col],
                 colorscale='RdYlGn',
                 showscale=True,
                 colorbar=dict(title=color_col),
@@ -276,32 +292,28 @@ with col1:
             name='Деревья'
         ))
         
-        # 6. Рассчитываем высоту графика для сохранения пропорций изображения
-        # Это важно, чтобы точки не "плыли" относительно фона
-        target_width = 900  # Целевая ширина отображения в пикселях
-        aspect_ratio = image.height / image.width
-        calculated_height = int(target_width * aspect_ratio)
-        # Ограничиваем высоту разумными пределами
-        calculated_height = max(400, min(calculated_height, 1000))
+        # 8. Настройка осей с сохранением пропорций
+        aspect_ratio = new_h / new_w
+        calc_height = int(900 * aspect_ratio)
+        calc_height = max(400, min(calc_height, 1000))
         
-        # 7. Настройка осей
         fig.update_layout(
             xaxis=dict(
-                range=[0, image.width],
-                scaleanchor="y",      # ← Привязываем масштаб X к Y
-                scaleratio=1,         # ← Сохраняем пропорции 1:1
+                range=[0, new_w],
+                scaleanchor="y",
+                scaleratio=1,
                 showgrid=False,
                 zeroline=False,
                 visible=False
             ),
             yaxis=dict(
-                range=[image.height, 0],
+                range=[new_h, 0],
                 showgrid=False,
                 zeroline=False,
                 visible=False
             ),
             margin=dict(l=0, r=0, t=40, b=0),
-            height=calculated_height,  # ← Динамическая высота
+            height=calc_height,
             hoverlabel=dict(bgcolor="white", font_size=12, font_family="Arial", bordercolor="#333")
         )
         
