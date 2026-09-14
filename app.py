@@ -29,11 +29,10 @@ def get_image_base64(img):
     img_str = base64.b64encode(buffered.getvalue()).decode()
     return f"data:image/png;base64,{img_str}"
 
-# --- КАСТОМНЫЙ CSS ДЛЯ УЛУЧШЕНИЯ ДИЗАЙНА ---
+# --- КАСТОМНЫЙ CSS ---
 def local_css():
     st.markdown("""
         <style>
-        /* Основные стили */
         .main-header {
             font-size: 2.5rem;
             font-weight: 600;
@@ -41,7 +40,6 @@ def local_css():
             margin-bottom: 1rem;
             text-align: center;
         }
-        
         .sub-header {
             font-size: 1.3rem;
             font-weight: 500;
@@ -50,34 +48,6 @@ def local_css():
             padding-bottom: 0.5rem;
             border-bottom: 2px solid #e2e8f0;
         }
-        
-        /* Сайдбар */
-        .sidebar-content {
-            padding: 1rem;
-        }
-        
-        /* Карточки с метриками */
-        .metric-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin: 0.5rem 0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            color: white;
-        }
-        
-        .metric-label {
-            font-size: 0.9rem;
-            opacity: 0.9;
-            margin-bottom: 0.5rem;
-        }
-        
-        .metric-value {
-            font-size: 2rem;
-            font-weight: 700;
-        }
-        
-        /* Кнопки */
         .stButton>button {
             background-color: #4299e1;
             color: white;
@@ -87,56 +57,25 @@ def local_css():
             font-weight: 500;
             transition: all 0.3s ease;
         }
-        
         .stButton>button:hover {
             background-color: #3182ce;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
         }
-        
-        /* Разделители */
         hr {
             border: none;
             border-top: 1px solid #e2e8f0;
             margin: 2rem 0;
         }
-        
-        /* Улучшение читаемости текста */
         .stMarkdown {
             color: #4a5568;
             line-height: 1.6;
         }
-        
-        /* Заголовки разделов */
         h3 {
             color: #2d3748;
             font-weight: 600;
             margin-top: 2rem;
         }
-        
-        /* Боковая панель */
-        .css-1d391kg {
-            background-color: #f7fafc;
-        }
-        
-        /* Информационные блоки */
-        .info-box {
-            background-color: #ebf8ff;
-            border-left: 4px solid #4299e1;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 0 8px 8px 0;
-        }
-        
-        .success-box {
-            background-color: #f0fff4;
-            border-left: 4px solid #48bb78;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 0 8px 8px 0;
-        }
-        
-        /* Адаптивность */
         @media (max-width: 768px) {
             .main-header {
                 font-size: 2rem;
@@ -145,7 +84,6 @@ def local_css():
         </style>
     """, unsafe_allow_html=True)
 
-# Применяем стили
 local_css()
 
 st.set_page_config(
@@ -154,8 +92,7 @@ st.set_page_config(
     page_icon="🌲"
 )
 
-# Заголовок с улучшенным оформлением
-st.markdown('<h1 class="main-header"> Система таксации лесов на основе данных БПЛА</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-header">Система таксации лесов на основе данных БПЛА</h1>', unsafe_allow_html=True)
 st.markdown('<p style="text-align: center; color: #718096; margin-bottom: 2rem;">Автоматизированный анализ древостоя и формирование отчетной документации</p>', unsafe_allow_html=True)
 st.markdown("---")
 
@@ -219,22 +156,12 @@ def calculate_additional_params(df, species=None):
     df_calc['Запас_м3_га'] = df_calc['Объём_расчётный_м3']
     return df_calc
 
-# Боковая панель
+# --- ЗАГРУЗКА ДАННЫХ ---
 with st.sidebar:
     st.markdown('<h3 style="color: #2d3748; margin-bottom: 1.5rem;">📁 Загрузка данных</h3>', unsafe_allow_html=True)
     
-    uploaded_image = st.file_uploader(
-        "Ортофотоплан участка",
-        type=["jpg", "jpeg", "png"],
-        help="Загрузите аэрофотоснимок участка в формате JPG или PNG"
-    )
-    
-    uploaded_xlsx = st.file_uploader(
-        "Таблица с данными",
-        type=["xlsx"],
-        help="Таблица Excel с таксационными характеристиками деревьев"
-    )
-    
+    uploaded_image = st.file_uploader("Ортофотоплан участка", type=["jpg", "jpeg", "png"], help="Загрузите аэрофотоснимок участка в формате JPG или PNG")
+    uploaded_xlsx = st.file_uploader("Таблица с данными", type=["xlsx"], help="Таблица Excel с таксационными характеристиками деревьев")
     demo_mode = st.checkbox("Использовать демонстрационные данные", value=False)
     
     if demo_mode:
@@ -277,12 +204,7 @@ species = None
 if not has_species_column:
     with st.sidebar:
         st.markdown('<h3 style="color: #2d3748; margin: 1.5rem 0 1rem 0;">🌳 Выбор породы</h3>', unsafe_allow_html=True)
-        species = st.selectbox(
-            "Порода деревьев на участке:",
-            list(SPECIES_DATA.keys()),
-            index=0,
-            help="Выберите преобладающую породу для расчета таксационных показателей"
-        )
+        species = st.selectbox("Порода деревьев на участке:", list(SPECIES_DATA.keys()), index=0, help="Выберите преобладающую породу для расчета таксационных показателей")
 else:
     st.sidebar.success("✅ В таблице указана порода деревьев")
     species_counts = df['Порода'].value_counts()
@@ -309,199 +231,167 @@ volume_per_ha = total_volume / area_ha if area_ha > 0 else 0
 
 numeric_cols = [col for col in df.select_dtypes(include=['number']).columns if col not in ['X', 'Y', 'ID']]
 
-with st.sidebar:
-    st.markdown("---")
-    st.markdown('<h3 style="color: #2d3748;">⚙️ Настройки отображения</h3>', unsafe_allow_html=True)
-    
-    color_col = st.selectbox(
-        "Цветовая индикация:",
-        numeric_cols,
-        index=0,
-        help="Параметр для цветового отображения деревьев на карте"
-    )
-    
-    size_col = st.selectbox(
-        "Размер маркеров:",
-        ["Нет"] + numeric_cols,
-        index=0,
-        help="Параметр для определения размера точек"
-    )
-    
-    st.markdown("##### Пороговые значения:")
-    filters = {}
-    for col in numeric_cols:
-        min_val, max_val = float(df[col].min()), float(df[col].max())
-        if min_val == max_val:
-            max_val = min_val + 1
-        min_thresh, max_thresh = st.slider(
-            f"{col}",
-            min_value=min_val,
-            max_value=max_val,
-            value=(min_val, max_val),
-            step=(max_val - min_val) / 100 if (max_val - min_val) > 0 else 0.1
-        )
-        filters[col] = (min_thresh, max_thresh)
-    
-    tovarnost_options = st.multiselect(
-        "Класс товарности",
-        ['I класс', 'II класс', 'III класс'],
-        default=['I класс', 'II класс', 'III класс']
-    )
-    
-    size_options = st.multiselect(
-        "Категория крупности",
-        ['Мелкомер', 'Среднемер', 'Крупномер', 'Очень крупный'],
-        default=['Мелкомер', 'Среднемер', 'Крупномер', 'Очень крупный']
-    )
-    
-    bonitet_options = st.multiselect(
-        "Бонитет",
-        ['I', 'II', 'III', 'IV', 'V'],
-        default=['I', 'II', 'III', 'IV', 'V']
-    )
+# =====================================================================
+# 🎯 БЛОК ПРЕСЕТОВ И ФИЛЬТРАЦИИ С ИСПОЛЬЗОВАНИЕМ SESSION_STATE
+# =====================================================================
 
-filtered_df = df.copy()
-for col, (min_t, max_t) in filters.items():
-    filtered_df = filtered_df[(filtered_df[col] >= min_t) & (filtered_df[col] <= max_t)]
-filtered_df = filtered_df[filtered_df['Класс товарности'].isin(tovarnost_options)]
-filtered_df = filtered_df[filtered_df['Категория крупности'].isin(size_options)]
-filtered_df = filtered_df[filtered_df['Бонитет'].isin(bonitet_options)]
+# 1. Инициализация session_state (только при первом запуске)
+if 'preset_mode' not in st.session_state:
+    st.session_state.preset_mode = "Ручная настройка"
 
-# --- ИНИЦИАЛИЗАЦИЯ SESSION STATE ---
 if 'filters' not in st.session_state:
     st.session_state.filters = {}
-if 'tovarnost_options' not in st.session_state:
-    st.session_state.tovarnost_options = ['I класс', 'II класс', 'III класс']
-if 'size_options' not in st.session_state:
-    st.session_state.size_options = ['Мелкомер', 'Среднемер', 'Крупномер', 'Очень крупный']
-if 'bonitet_options' not in st.session_state:
-    st.session_state.bonitet_options = ['I', 'II', 'III', 'IV', 'V']
-
-# --- ПРЕСЕТЫ ФИЛЬТРАЦИИ ---
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 🎯 Пресеты фильтрации")
-
-preset_mode = st.sidebar.radio(
-    "Выберите режим фильтрации:",
-    ["Ручная настройка", "Заготовка древесины (оптимум)", "Молодняк (уход)", "Все деревья"],
-    index=1
-)
-
-# Применяем пресет при изменении
-if preset_mode == "Заготовка древесины (оптимум)":
-    # Автоматическая установка порогов согласно методике
     for col in numeric_cols:
-        if col == 'Высота, м':
-            st.session_state.filters[col] = (20.0, float(df[col].max()))
-        elif col == 'Объём ствола, м3':
-            st.session_state.filters[col] = (1.0, float(df[col].max()))
-        elif col == 'Объём_расчётный_м3':
-            st.session_state.filters[col] = (1.0, float(df[col].max()))
-        elif col == 'Диаметр ствола, см':
-            st.session_state.filters[col] = (14.0, float(df[col].max()))
-        else:
-            st.session_state.filters[col] = (float(df[col].min()), float(df[col].max()))
-    
-    st.session_state.tovarnost_options = ['I класс', 'II класс']
-    st.session_state.size_options = ['Крупномер', 'Очень крупный']
-    st.session_state.bonitet_options = ['I', 'II', 'III']
-    
-    st.sidebar.success("✅ Применены оптимальные параметры для заготовки древесины")
-    st.sidebar.info("📋 Критерии:\n• Высота ≥ 20 м\n• Объем ≥ 1 м³\n• Диаметр ≥ 14 см\n• I-II класс товарности\n• I-III бонитет")
-
-elif preset_mode == "Молодняк (уход)":
-    for col in numeric_cols:
-        if col == 'Высота, м':
-            st.session_state.filters[col] = (5.0, 15.0)
-        elif col == 'Диаметр ствола, см':
-            st.session_state.filters[col] = (8.0, 20.0)
-        else:
-            st.session_state.filters[col] = (float(df[col].min()), float(df[col].max()))
-    
-    st.session_state.tovarnost_options = ['III класс']
-    st.session_state.size_options = ['Мелкомер', 'Среднемер']
-    st.session_state.bonitet_options = ['I', 'II', 'III', 'IV', 'V']
-    
-    st.sidebar.success("✅ Применены параметры для ухода за молодняком")
-
-elif preset_mode == "Все деревья":
-    for col in numeric_cols:
-        st.session_state.filters[col] = (float(df[col].min()), float(df[col].max()))
-    
-    st.session_state.tovarnost_options = ['I класс', 'II класс', 'III класс']
-    st.session_state.size_options = ['Мелкомер', 'Среднемер', 'Крупномер', 'Очень крупный']
-    st.session_state.bonitet_options = ['I', 'II', 'III', 'IV', 'V']
-    
-    st.sidebar.success("✅ Отображаются все деревья")
-
-# --- БОКОВАЯ ПАНЕЛЬ С НАСТРОЙКАМИ ---
-st.sidebar.markdown("---")
-st.sidebar.header("⚙️ Параметры фильтрации")
-
-color_col = st.sidebar.selectbox("🎨 Параметр для цвета:", numeric_cols, index=0)
-size_col = st.sidebar.selectbox("📏 Параметр для размера:", ["Нет"] + numeric_cols, index=0)
-
-st.sidebar.markdown("**📊 Пороговые значения:**")
-
-# Инициализируем фильтры в session_state если их нет
-for col in numeric_cols:
-    if col not in st.session_state.filters:
         min_val, max_val = float(df[col].min()), float(df[col].max())
         if min_val == max_val:
             max_val = min_val + 1
         st.session_state.filters[col] = (min_val, max_val)
 
-# Создаем слайдеры с привязкой к session_state
-for col in numeric_cols:
-    min_val, max_val = float(df[col].min()), float(df[col].max())
-    if min_val == max_val:
-        max_val = min_val + 1
+if 'tovarnost_options' not in st.session_state:
+    st.session_state.tovarnost_options = ['I класс', 'II класс', 'III класс']
+
+if 'size_options' not in st.session_state:
+    st.session_state.size_options = ['Мелкомер', 'Среднемер', 'Крупномер', 'Очень крупный']
+
+if 'bonitet_options' not in st.session_state:
+    st.session_state.bonitet_options = ['I', 'II', 'III', 'IV', 'V']
+
+# 2. Функция применения пресета
+def apply_preset(preset_name, df, numeric_cols):
+    """Применяет пресет и обновляет session_state"""
     
-    current_value = st.session_state.filters[col]
+    if preset_name == "Заготовка древесины (оптимум)":
+        for col in numeric_cols:
+            min_val, max_val = float(df[col].min()), float(df[col].max())
+            if col == 'Высота, м':
+                st.session_state.filters[col] = (20.0, max_val)
+            elif col == 'Объём ствола, м3':
+                st.session_state.filters[col] = (1.0, max_val)
+            elif col == 'Объём_расчётный_м3':
+                st.session_state.filters[col] = (1.0, max_val)
+            elif col == 'Диаметр ствола, см':
+                st.session_state.filters[col] = (14.0, max_val)
+            else:
+                st.session_state.filters[col] = (min_val, max_val)
+        
+        st.session_state.tovarnost_options = ['I класс', 'II класс']
+        st.session_state.size_options = ['Крупномер', 'Очень крупный']
+        st.session_state.bonitet_options = ['I', 'II', 'III']
+        
+    elif preset_name == "Молодняк (уход)":
+        for col in numeric_cols:
+            min_val, max_val = float(df[col].min()), float(df[col].max())
+            if col == 'Высота, м':
+                st.session_state.filters[col] = (5.0, 15.0)
+            elif col == 'Диаметр ствола, см':
+                st.session_state.filters[col] = (8.0, 20.0)
+            else:
+                st.session_state.filters[col] = (min_val, max_val)
+        
+        st.session_state.tovarnost_options = ['III класс']
+        st.session_state.size_options = ['Мелкомер', 'Среднемер']
+        st.session_state.bonitet_options = ['I', 'II', 'III', 'IV', 'V']
+        
+    elif preset_name == "Все деревья":
+        for col in numeric_cols:
+            min_val, max_val = float(df[col].min()), float(df[col].max())
+            st.session_state.filters[col] = (min_val, max_val)
+        
+        st.session_state.tovarnost_options = ['I класс', 'II класс', 'III класс']
+        st.session_state.size_options = ['Мелкомер', 'Среднемер', 'Крупномер', 'Очень крупный']
+        st.session_state.bonitet_options = ['I', 'II', 'III', 'IV', 'V']
+
+# 3. Виджет выбора пресета (в sidebar)
+with st.sidebar:
+    st.markdown("---")
+    st.markdown("### 🎯 Пресеты фильтрации")
     
-    # Ограничиваем текущее значение допустимым диапазоном
-    current_min = max(current_value[0], min_val)
-    current_max = min(current_value[1], max_val)
-    if current_min > current_max:
-        current_min = current_max
-    
-    new_value = st.sidebar.slider(
-        f"{col}:",
-        min_value=min_val,
-        max_value=max_val,
-        value=(current_min, current_max),
-        step=(max_val - min_val) / 100 if (max_val - min_val) > 0 else 0.1,
-        key=f"slider_{col}"
+    preset_mode = st.radio(
+        "Выберите режим фильтрации:",
+        ["Ручная настройка", "Заготовка древесины (оптимум)", "Молодняк (уход)", "Все деревья"],
+        index=0,
+        key="preset_radio"
     )
     
-    st.session_state.filters[col] = new_value
+    # Если пресет изменился — применяем его
+    if preset_mode != st.session_state.preset_mode:
+        st.session_state.preset_mode = preset_mode
+        apply_preset(preset_mode, df, numeric_cols)
+        st.rerun()  # Перезапускаем для обновления виджетов
+    
+    # Показываем информацию о текущем пресете
+    if preset_mode == "Заготовка древесины (оптимум)":
+        st.success("✅ Применены оптимальные параметры для заготовки древесины")
+        st.info("📋 Критерии:\n• Высота ≥ 20 м\n• Объем ≥ 1 м³\n• Диаметр ≥ 14 см\n• I-II класс товарности\n• I-III бонитет")
+    elif preset_mode == "Молодняк (уход)":
+        st.success("✅ Применены параметры для ухода за молодняком")
+        st.info("📋 Критерии:\n• Высота 5-15 м\n• Диаметр 8-20 см\n• III класс товарности")
+    elif preset_mode == "Все деревья":
+        st.success("✅ Отображаются все деревья")
 
-# Мультиселекты с привязкой к session_state
-st.sidebar.markdown("**🏷️ Класс товарности:**")
-st.session_state.tovarnost_options = st.sidebar.multiselect(
-    "Выберите классы:",
-    ['I класс', 'II класс', 'III класс'],
-    default=st.session_state.tovarnost_options,
-    key="tovarnost_select"
-)
+# 4. Виджеты фильтрации (читают и записывают в session_state)
+with st.sidebar:
+    st.markdown("---")
+    st.markdown('<h3 style="color: #2d3748;">⚙️ Настройки отображения</h3>', unsafe_allow_html=True)
+    
+    color_col = st.selectbox("Цветовая индикация:", numeric_cols, index=0, help="Параметр для цветового отображения деревьев на карте")
+    size_col = st.selectbox("Размер маркеров:", ["Нет"] + numeric_cols, index=0, help="Параметр для определения размера точек")
+    
+    st.markdown("##### Пороговые значения:")
+    
+    # Слайдеры с привязкой к session_state
+    for col in numeric_cols:
+        min_val, max_val = float(df[col].min()), float(df[col].max())
+        if min_val == max_val:
+            max_val = min_val + 1
+        
+        # Получаем текущее значение из session_state
+        current_value = st.session_state.filters.get(col, (min_val, max_val))
+        
+        # Ограничиваем значение допустимым диапазоном
+        current_min = max(min(current_value[0], current_value[1]), min_val)
+        current_max = min(max(current_value[0], current_value[1]), max_val)
+        if current_min > current_max:
+            current_min = current_max
+        
+        new_value = st.slider(
+            f"{col}:",
+            min_value=min_val,
+            max_value=max_val,
+            value=(current_min, current_max),
+            step=(max_val - min_val) / 100 if (max_val - min_val) > 0 else 0.1,
+            key=f"slider_{col}"
+        )
+        
+        # Сохраняем в session_state
+        st.session_state.filters[col] = new_value
+    
+    # Мультиселекты с привязкой к session_state
+    st.markdown("**🏷️ Класс товарности:**")
+    st.session_state.tovarnost_options = st.multiselect(
+        "Выберите классы:",
+        ['I класс', 'II класс', 'III класс'],
+        default=st.session_state.tovarnost_options,
+        key="tovarnost_select"
+    )
+    
+    st.markdown("**📦 Категория крупности:**")
+    st.session_state.size_options = st.multiselect(
+        "Выберите категории:",
+        ['Мелкомер', 'Среднемер', 'Крупномер', 'Очень крупный'],
+        default=st.session_state.size_options,
+        key="size_select"
+    )
+    
+    st.markdown("** Бонитет:**")
+    st.session_state.bonitet_options = st.multiselect(
+        "Выберите бонитет:",
+        ['I', 'II', 'III', 'IV', 'V'],
+        default=st.session_state.bonitet_options,
+        key="bonitet_select"
+    )
 
-st.sidebar.markdown("**📦 Категория крупности:**")
-st.session_state.size_options = st.sidebar.multiselect(
-    "Выберите категории:",
-    ['Мелкомер', 'Среднемер', 'Крупномер', 'Очень крупный'],
-    default=st.session_state.size_options,
-    key="size_select"
-)
-
-st.sidebar.markdown("** Бонитет:**")
-st.session_state.bonitet_options = st.sidebar.multiselect(
-    "Выберите бонитет:",
-    ['I', 'II', 'III', 'IV', 'V'],
-    default=st.session_state.bonitet_options,
-    key="bonitet_select"
-)
-
-# --- ФИЛЬТРАЦИЯ ДАННЫХ ---
+# 5. ФИЛЬТРАЦИЯ ДАННЫХ (использует session_state)
 filtered_df = df.copy()
 
 for col, (min_t, max_t) in st.session_state.filters.items():
@@ -511,6 +401,100 @@ for col, (min_t, max_t) in st.session_state.filters.items():
 filtered_df = filtered_df[filtered_df['Класс товарности'].isin(st.session_state.tovarnost_options)]
 filtered_df = filtered_df[filtered_df['Категория крупности'].isin(st.session_state.size_options)]
 filtered_df = filtered_df[filtered_df['Бонитет'].isin(st.session_state.bonitet_options)]
+
+if not demo_mode:
+    with st.sidebar:
+        st.markdown("---")
+        st.markdown("##### Информация о файлах:")
+        st.write(f"📄 {uploaded_image.name}")
+        st.write(f"📊 {uploaded_xlsx.name}")
+        st.write(f"📋 Записей: {len(df)}")
+
+# =====================================================================
+# ОСНОВНАЯ ВИЗУАЛИЗАЦИЯ
+# =====================================================================
+st.markdown('<h2 class="sub-header">🗺️ Интерактивная карта участка</h2>', unsafe_allow_html=True)
+
+col1, col2 = st.columns([3, 1])
+
+with col1:
+    if not filtered_df.empty:
+        fig = go.Figure()
+        img_base64 = get_image_base64(image)
+        
+        fig.add_layout_image(
+            dict(
+                source=img_base64,
+                xref="x",
+                yref="y",
+                x=0,
+                y=0,
+                sizex=image.width,
+                sizey=image.height,
+                xanchor="left",
+                yanchor="bottom",
+                sizing="stretch",
+                opacity=1.0,
+                layer="below"
+            )
+        )
+        
+        hover_texts = []
+        for i, row in filtered_df.iterrows():
+            tree_species = row.get('Порода', species if species else 'Не указана')
+            tree_id = row.get('ID', i + 1)
+            text = (
+                f"<b>Дерево #{tree_id}</b><br>"
+                f"Порода: {tree_species}<br>"
+                f"Высота: {row['Высота, м']:.1f} м<br>"
+                f"Диаметр ствола: {row['Диаметр ствола, см']:.1f} см<br>"
+                f"Диаметр кроны: {row['Диаметр кроны, м']:.1f} м<br>"
+                f"Площадь кроны: {row['Площадь кроны, м2']:.2f} м²<br>"
+                f"Объём (исх.): {row['Объём ствола, м3']:.3f} м³<br>"
+                f"Объём (расч.): {row['Объём_расчётный_м3']:.3f} м³<br>"
+                f"Товарность: {row['Класс товарности']}<br>"
+                f"Бонитет: {row['Бонитет']}<br>"
+                f"Крупность: {row['Категория крупности']}<br>"
+                f"Виталитет: {row['Индекс виталитета']:.1f}"
+            )
+            hover_texts.append(text)
+        
+        if size_col != "Нет":
+            sizes = (filtered_df[size_col] - filtered_df[size_col].min()) / (filtered_df[size_col].max() - filtered_df[size_col].min() + 1e-5) * 30 + 10
+        else:
+            sizes = [15] * len(filtered_df)
+        
+        fig.add_trace(go.Scatter(
+            x=filtered_df['X'],
+            y=image.height - filtered_df['Y'],
+            mode='markers',
+            marker=dict(
+                size=sizes,
+                color=filtered_df[color_col],
+                colorscale='RdYlGn',
+                showscale=True,
+                colorbar=dict(title=color_col),
+                line=dict(width=1, color='white'),
+                opacity=0.9
+            ),
+            text=hover_texts,
+            hoverinfo='text',
+            name='Деревья'
+        ))
+        
+        fig.update_layout(
+            xaxis=dict(range=[0, image.width], showgrid=False, zeroline=False, visible=False),
+            yaxis=dict(range=[0, image.height], showgrid=False, zeroline=False, visible=False),
+            margin=dict(l=0, r=0, t=40, b=0),
+            height=700,
+            hoverlabel=dict(bgcolor="white", font_size=12, font_family="Arial", bordercolor="#333")
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        st.info("💡 Наведите курсор на точку для просмотра характеристик дерева")
+    else:
+        st.warning("⚠️ Деревья не найдены. Измените параметры фильтрации.")
+        st.image(image, caption="Ортофотоплан участка", use_container_width=True)
 
 with col2:
     st.markdown('<h3 class="sub-header">📊 Результаты анализа</h3>', unsafe_allow_html=True)
@@ -577,7 +561,7 @@ with col_report2:
     include_summary = st.checkbox("Сводная информация", value=True)
     include_tovarnost = st.checkbox("Классы товарности", value=True)
 
-if st.button("📥 Сформировать отчёт Excel", type="primary", use_container_width=True):
+if st.button(" Сформировать отчёт Excel", type="primary", use_container_width=True):
     try:
         import xlsxwriter
         filename = f'отчет_{datetime.now().strftime("%Y%m%d_%H%M")}.xlsx'
