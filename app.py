@@ -367,6 +367,48 @@ filtered_df = filtered_df[filtered_df['Класс товарности'].isin(to
 filtered_df = filtered_df[filtered_df['Категория крупности'].isin(size_options)]
 filtered_df = filtered_df[filtered_df['Бонитет'].isin(bonitet_options)]
 
+# --- ПРЕСЕТЫ ФИЛЬТРАЦИИ ---
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 🎯 Пресеты фильтрации")
+
+preset_mode = st.sidebar.radio(
+    "Выберите режим фильтрации:",
+    ["Ручная настройка", "Заготовка древесины (оптимум)", "Молодняк (уход)", "Все деревья"],
+    index=1
+)
+
+if preset_mode == "Заготовка древесины (оптимум)":
+    # Автоматическая установка порогов согласно методике
+    filters['Высота, м'] = (20.0, float(df['Высота, м'].max()))
+    filters['Объём ствола, м3'] = (1.0, float(df['Объём ствола, м3'].max()))
+    filters['Объём_расчётный_м3'] = (1.0, float(df['Объём_расчётный_м3'].max()))
+    filters['Диаметр ствола, см'] = (14.0, float(df['Диаметр ствола, см'].max()))
+    
+    tovarnost_options = ['I класс', 'II класс']
+    size_options = ['Крупномер', 'Очень крупный']
+    bonitet_options = ['I', 'II', 'III']
+    
+    st.sidebar.success("✅ Применены оптимальные параметры для заготовки древесины")
+    st.sidebar.info("📋 Критерии:\n• Высота ≥ 20 м\n• Объем ≥ 1 м³\n• Диаметр ≥ 14 см\n• I-II класс товарности\n• I-III бонитет")
+
+elif preset_mode == "Молодняк (уход)":
+    filters['Высота, м'] = (5.0, 15.0)
+    filters['Диаметр ствола, см'] = (8.0, 20.0)
+    tovarnost_options = ['III класс']
+    size_options = ['Мелкомер', 'Среднемер']
+    bonitet_options = ['I', 'II', 'III', 'IV', 'V']
+    
+    st.sidebar.success("✅ Применены параметры для ухода за молодняком")
+
+elif preset_mode == "Все деревья":
+    for col in numeric_cols:
+        filters[col] = (float(df[col].min()), float(df[col].max()))
+    tovarnost_options = ['I класс', 'II класс', 'III класс']
+    size_options = ['Мелкомер', 'Среднемер', 'Крупномер', 'Очень крупный']
+    bonitet_options = ['I', 'II', 'III', 'IV', 'V']
+    
+    st.sidebar.success("✅ Отображаются все деревья")
+
 if not demo_mode:
     with st.sidebar:
         st.markdown("---")
