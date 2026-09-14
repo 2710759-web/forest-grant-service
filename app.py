@@ -270,48 +270,15 @@ with col1:
     st.subheader("🗺️ Интерактивная карта выделенных территорий")
     
     if not filtered_df.empty:
-        # Масштабируем изображение для Plotly (максимум 2000x2000)
-        max_size = 2000
-        img_width, img_height = image.size
+        # Показываем изображение отдельно
+        st.image(image, caption="Ортофотоплан участка", use_column_width=True)
         
-        if img_width > max_size or img_height > max_size:
-            scale = max_size / max(img_width, img_height)
-            new_size = (int(img_width * scale), int(img_height * scale))
-            image_resized = image.resize(new_size, Image.LANCZOS)
-            st.sidebar.info(f" Изображение масштабировано: {img_width}x{img_height} → {new_size[0]}x{new_size[1]}")
-        else:
-            image_resized = image.copy()
-            new_size = (img_width, img_height)
-        
-        # Масштабируем координаты деревьев
-        scale_x = new_size[0] / img_width
-        scale_y = new_size[1] / img_height
-        
-        filtered_df_scaled = filtered_df.copy()
-        filtered_df_scaled['X_scaled'] = filtered_df_scaled['X'] * scale_x
-        filtered_df_scaled['Y_scaled'] = filtered_df_scaled['Y'] * scale_y
-        
-        # Конвертируем в Base64
-        img_base64 = get_image_base64(image_resized)
-        
+        # Создаем интерактивный график БЕЗ фона
         fig = go.Figure()
         
-        # Добавляем фоновое изображение
-        fig.add_layout_image(
-            dict(
-                source=img_base64,
-                xref="x", yref="y",
-                x=0, y=new_size[1],
-                sizex=new_size[0], sizey=new_size[1],
-                sizing="stretch",
-                opacity=1.0,
-                layer="below"
-            )
-        )
-        
-        # Подготовка текста для всплывающих подсказок
+        # Подготовка текста
         hover_texts = []
-        for i, row in filtered_df_scaled.iterrows():
+        for i, row in filtered_df.iterrows():
             tree_species = row.get('Порода', species if species else 'Не указана')
             tree_id = row.get('ID', i + 1)
             
@@ -333,18 +300,17 @@ with col1:
         
         # Расчет размера точек
         if size_col != "Нет":
-            sizes = (filtered_df_scaled[size_col] - filtered_df_scaled[size_col].min()) / (filtered_df_scaled[size_col].max() - filtered_df_scaled[size_col].min() + 1e-5) * 30 + 10
+            sizes = (filtered_df[size_col] - filtered_df[size_col].min()) / (filtered_df[size_col].max() - filtered_df[size_col].min() + 1e-5) * 30 + 10
         else:
-            sizes = [15] * len(filtered_df_scaled)
+            sizes = [15] * len(filtered_df)
         
-        # Добавляем точки
         fig.add_trace(go.Scatter(
-            x=filtered_df_scaled['X_scaled'],
-            y=filtered_df_scaled['Y_scaled'],
+            x=filtered_df['X'],
+            y=filtered_df['Y'],
             mode='markers',
             marker=dict(
                 size=sizes,
-                color=filtered_df_scaled[color_col],
+                color=filtered_df[color_col],
                 colorscale='RdYlGn',
                 showscale=True,
                 colorbar=dict(title=color_col),
@@ -356,23 +322,16 @@ with col1:
             name='Деревья'
         ))
         
-        # Настройка осей
         fig.update_layout(
-            xaxis=dict(range=[0, new_size[0]], showgrid=False, zeroline=False, visible=False),
-            yaxis=dict(range=[new_size[1], 0], showgrid=False, zeroline=False, visible=False),
-            margin=dict(l=0, r=0, t=40, b=0),
-            height=700,
+            xaxis=dict(showgrid=False, zeroline=False, title="X координата"),
+            yaxis=dict(showgrid=False, zeroline=False, title="Y координата"),
+            margin=dict(l=50, r=50, t=40, b=50),
+            height=600,
             hoverlabel=dict(bgcolor="white", font_size=12, font_family="Arial", bordercolor="#333")
         )
         
         st.plotly_chart(fig, use_container_width=True)
-        
-        # Отладочная информация
-        st.sidebar.markdown("---")
-        st.sidebar.markdown("**🔍 Отладка:**")
-        st.sidebar.write(f"Размер изображения: {new_size[0]}x{new_size[1]}")
-        st.sidebar.write(f"Диапазон X: {filtered_df_scaled['X_scaled'].min():.0f} - {filtered_df_scaled['X_scaled'].max():.0f}")
-        st.sidebar.write(f"Диапазон Y: {filtered_df_scaled['Y_scaled'].min():.0f} - {filtered_df_scaled['Y_scaled'].max():.0f}")
+        st.info(" Наведите на точки для просмотра характеристик деревьев")
         
     else:
         st.warning("Деревья не найдены. Измените параметры фильтрации.")
