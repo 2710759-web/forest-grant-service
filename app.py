@@ -9557,14 +9557,6 @@ def render_contacts(config: dict, *, full: bool = False):
     st.markdown(f'**Генеральный директор:** {config["director"]}')
     st.markdown(f'**Телефон:** [{config["phone"]}](tel:{config["phone_uri"]})')
     st.markdown(f'**Электронная почта:** [{config["contact_email"]}](mailto:{config["contact_email"]})')
-    if full:
-        # Это публичный сайт: блок раскрывается по действию посетителя.
-        with st.expander('Фактический адрес и реквизиты организации', expanded=False):
-            st.markdown(f'**Фактический адрес:** {config["actual_address"]}')
-            st.markdown(f'**ИНН:** {config["inn"]}  \n**КПП:** {config["kpp"]}  \n**ОГРН:** {config["ogrn"]}')
-            st.markdown('**Банковские реквизиты:**')
-            st.markdown(f'Банк: {config["bank"]}  \nРасчётный счёт: `{config["settlement_account"]}`  \nБИК: `{config["bic"]}`  \nКорреспондентский счёт: `{config["correspondent_account"]}`')
-
 
 def render_home(base_dir: Path, config: dict):
     st.markdown('<div class="hero-eyebrow">ГЕОАНАЛИТИКА · БЕСПИЛОТНЫЕ АВИАЦИОННЫЕ СИСТЕМЫ · ЛЕСНОЕ ХОЗЯЙСТВО</div>', unsafe_allow_html=True)
